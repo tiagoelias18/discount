@@ -1,56 +1,41 @@
 import 'package:discount/interactor/discount_interactor.dart';
-import 'package:discount/origin/calculate_discount.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../origin/calculate_discount_failure_mock.dart';
-import '../origin/calculte_discount_success_mock.dart';
+import '../origin/calculate_origin_mock.dart';
 import '../presenter/discount_listener_mock.dart';
-import 'discount_interactor_receiver_mock.dart';
 
 main() {
   group('Discount interactor', () {
     DiscountInteractor _discountInteractor;
-    CalculateDiscount _discountOrigin;
+    CalculateDiscountMock _discountOrigin;
     DiscountListenerMock _discountListener;
-    DiscountInteractorReceiverMock _interactorReceiver;
 
     setUp(() {
-      _interactorReceiver = DiscountInteractorReceiverMock();
       _discountListener = DiscountListenerMock();
-    });
-
-    void _getInteractor({CalculateDiscount discountOrigin}) {
+      _discountOrigin = CalculateDiscountMock();
       _discountInteractor =
-          DiscountInteractor(_discountListener, origin: discountOrigin ?? null);
-    }
-
-    test('Obtain final value success', () {
-      _discountOrigin = CalculateDiscountSuccessMock(_interactorReceiver);
-      _getInteractor(discountOrigin: _discountOrigin);
+          DiscountInteractor(_discountListener, origin: _discountOrigin);
+    });
+    test('Obtain final value - double values', () {
       _discountInteractor.obtainFinalValue("20", "10");
-      expect(_interactorReceiver.callsToReceiveFinalValue, 1);
-      expect(_interactorReceiver.valueReceived, 10);
+      expect(_discountOrigin.callsCalculateDiscount, 1);
+      expect(_discountOrigin.valueReceived, 20);
+      expect(_discountOrigin.discountReceived, 10);
     });
 
-    test('Obtain final value failure', () {
-      _discountOrigin = CalculateDiscountFailureMock(_interactorReceiver);
-      _getInteractor(discountOrigin: _discountOrigin);
-      _discountInteractor.obtainFinalValue("null", "null");
-      expect(_interactorReceiver.callsToReceiveFinalValueError, 1);
-      expect(_interactorReceiver.errorReceived, "failure");
+    test('Obtain final value - error values', () {
+      _discountInteractor.obtainFinalValue("ab", "");
+      expect(_discountOrigin.callsCalculateDiscount, 1);
+      expect(_discountOrigin.valueReceived, null);
+      expect(_discountOrigin.discountReceived, null);
     });
 
     test('Receive final value success', () {
-      _discountOrigin = CalculateDiscountFailureMock(_interactorReceiver);
-      _getInteractor();
-      double value = 10;
-      _discountInteractor.receiveFinalValue(value);
+      _discountInteractor.receiveFinalValue(10);
       expect(_discountListener.callsToReceiveFinalValue, 1);
-      expect(_discountListener.value, 'O valor final é ' + value.toStringAsFixed(2));
+      expect(_discountListener.value, 'O valor final é 10.00');
     });
 
     test('Receive final value failure', () {
-      _discountOrigin = CalculateDiscountFailureMock(_interactorReceiver);
-      _getInteractor();
       _discountInteractor.receiveFinalValueError('failure');
       expect(_discountListener.callsToReceiveFinalValue, 1);
       expect(_discountListener.value, 'failure');

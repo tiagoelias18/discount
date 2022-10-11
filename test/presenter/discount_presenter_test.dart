@@ -7,12 +7,12 @@ main() {
     DiscountPresenter _discountPresenter;
     DiscountInteractorProviderMock _discountInteractorMock;
 
-    setUpAll(() {
+    setUp(() {
       _discountInteractorMock = DiscountInteractorProviderMock();
       _discountPresenter = DiscountPresenter(interactor: _discountInteractorMock);
     });
 
-    test('Verify user has token', () {
+    test('Obtain Final value', () {
       _discountPresenter.obtainFinalValue("4", "2");
       expect(_discountInteractorMock.callsToObtainFinalValues, 1);
     });
